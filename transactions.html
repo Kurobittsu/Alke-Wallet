@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet - Movimientos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <a class="navbar-brand" href="menu.html">Alke Wallet</a>
+    <div class="d-flex gap-3 align-items-center">
+      <a href="deposit.html"      class="text-white text-decoration-none">Depositar</a>
+      <a href="sendmoney.html"    class="text-white text-decoration-none">Enviar</a>
+      <a href="transactions.html" class="text-white text-decoration-none">Movimientos</a>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width: 640px;">
+
+    <a href="menu.html" class="text-muted text-decoration-none mb-3 d-block">← Volver</a>
+    <h4 class="mb-4">📋 Últimos movimientos</h4>
+
+    <!-- Filtros -->
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+      <button class="btn btn-primary btn-sm"        onclick="filtrar('todos')">Todos</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="filtrar('deposito')">Depósitos</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="filtrar('ingreso')">Recibidos</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="filtrar('egreso')">Enviados</button>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="mb-3">
+      <input type="text" id="buscador" class="form-control" placeholder="Buscar movimiento...">
+    </div>
+
+    <!-- Lista -->
+    <div class="card p-3">
+      <div id="lista-movimientos"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    verificarSesion();
+
+    let filtroActivo = "todos";
+    let busqueda     = "";
+
+    function mostrarMovimientos() {
+      const todas = obtenerTransacciones();
+
+      const filtradas = todas.filter(function(tx) {
+        const coincideFiltro  = filtroActivo === "todos" || tx.tipo === filtroActivo;
+        const coincideBusqueda = tx.descripcion.toLowerCase().includes(busqueda);
+        return coincideFiltro && coincideBusqueda;
+      });
+
+      $("#lista-movimientos").empty();
+
+      if (filtradas.length === 0) {
+        $("#lista-movimientos").html('<p class="text-muted text-center py-3">Sin resultados</p>');
+        return;
+      }
+
+      filtradas.forEach(function(tx) {
+        const esPositivo = tx.monto > 0;
+        const clase      = esPositivo ? "monto-positivo" : "monto-negativo";
+        const signo      = esPositivo ? "+" : "";
+
+        $("#lista-movimientos").append(`
+          <div class="transaccion-item d-flex justify-content-between">
+            <div>
+              <div>${tx.descripcion}</div>
+              <small class="text-muted">${tx.fecha}</small>
+            </div>
+            <div class="${clase}">${signo}$${formatearMonto(tx.monto)}</div>
+          </div>
+        `);
+      });
+    }
+
+    function filtrar(tipo) {
+      filtroActivo = tipo;
+      mostrarMovimientos();
+    }
+
+    // Búsqueda con jQuery
+    $("#buscador").on("input", function() {
+      busqueda = $(this).val().toLowerCase().trim();
+      mostrarMovimientos();
+    });
+
+    mostrarMovimientos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet - Depositar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <a class="navbar-brand" href="menu.html">Alke Wallet</a>
+    <div class="d-flex gap-3 align-items-center">
+      <a href="deposit.html"      class="text-white text-decoration-none">Depositar</a>
+      <a href="sendmoney.html"    class="text-white text-decoration-none">Enviar</a>
+      <a href="transactions.html" class="text-white text-decoration-none">Movimientos</a>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width: 520px;">
+
+    <a href="menu.html" class="text-muted text-decoration-none mb-3 d-block">← Volver</a>
+    <h4 class="mb-4">💰 Depositar fondos</h4>
+
+    <!-- Saldo actual -->
+    <div class="saldo-card mb-4">
+      <p class="mb-1 opacity-75">Saldo actual</p>
+      <div class="saldo-monto">$<span id="saldo">0,00</span></div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card p-4 mb-4">
+      <div id="mensaje" class="alert d-none"></div>
+
+      <div class="mb-3">
+        <label class="form-label">Monto a depositar</label>
+        <input type="number" id="monto" class="form-control" placeholder="Ej: 1000" min="1">
+      </div>
+
+      <button class="btn btn-primary w-100" onclick="realizarDeposito()">Realizar depósito</button>
+    </div>
+
+    <!-- Historial de depósitos -->
+    <div class="card p-3">
+      <h6 class="mb-3">Historial de depósitos</h6>
+      <div id="historial"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    verificarSesion();
+
+    $("#saldo").text(formatearMonto(obtenerSaldo()));
+
+    function cargarHistorial() {
+      const depositos = obtenerTransacciones().filter(tx => tx.tipo === "deposito");
+      $("#historial").empty();
+
+      if (depositos.length === 0) {
+        $("#historial").html('<p class="text-muted">Sin depósitos registrados</p>');
+        return;
+      }
+
+      depositos.forEach(function(tx) {
+        $("#historial").append(`
+          <div class="transaccion-item d-flex justify-content-between">
+            <div>
+              <div>${tx.descripcion}</div>
+              <small class="text-muted">${tx.fecha}</small>
+            </div>
+            <div class="monto-positivo">+$${formatearMonto(tx.monto)}</div>
+          </div>
+        `);
+      });
+    }
+
+    cargarHistorial();
+
+    function realizarDeposito() {
+      const monto = parseFloat($("#monto").val());
+      const msg   = $("#mensaje");
+
+      if (!monto || monto <= 0) {
+        msg.text("Ingresá un monto válido.").removeClass("d-none alert-success").addClass("alert-danger");
+        return;
+      }
+
+      const nuevoSaldo = obtenerSaldo() + monto;
+      guardarSaldo(nuevoSaldo);
+      agregarTransaccion({ tipo: "deposito", descripcion: "Depósito propio", monto: monto });
+
+      $("#saldo").text(formatearMonto(nuevoSaldo));
+      $("#monto").val("");
+      cargarHistorial();
+
+      msg.text("¡Depósito de $" + formatearMonto(monto) + " realizado!").removeClass("d-none alert-danger").addClass("alert-success");
+    }
+  </script>
+</body>
+</html>

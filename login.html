@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet - Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+
+  <div class="card p-4" style="width: 100%; max-width: 380px;">
+    <h2 class="text-center mb-1">Alke Wallet</h2>
+    <p class="text-center text-muted mb-4">Ingresá a tu cuenta</p>
+
+    <div id="error" class="alert alert-danger d-none"></div>
+
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" id="email" class="form-control" placeholder="correo@ejemplo.com">
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Contraseña</label>
+      <input type="password" id="password" class="form-control" placeholder="••••••••">
+    </div>
+
+    <button class="btn btn-primary w-100" onclick="iniciarSesion()">Ingresar</button>
+
+    <p class="text-muted text-center mt-3" style="font-size: 0.8rem;">
+      Usuario: <strong>admin@alke.com</strong> / Contraseña: <strong>admin</strong>
+    </p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Si ya hay sesión, redirigir al menú
+    if (obtenerSesion()) window.location.href = "menu.html";
+
+    function iniciarSesion() {
+      const email    = $("#email").val().trim();
+      const password = $("#password").val();
+
+      const usuario = usuarios.find(u => u.email === email && u.password === password);
+
+      if (!usuario) {
+        $("#error").text("Email o contraseña incorrectos.").removeClass("d-none");
+        return;
+      }
+
+      guardarSesion({ id: usuario.id, nombre: usuario.nombre, email: usuario.email, saldo: usuario.saldo });
+      window.location.href = "menu.html";
+    }
+
+    // También permite presionar Enter
+    $("#password").on("keypress", function(e) {
+      if (e.key === "Enter") iniciarSesion();
+    });
+  </script>
+</body>
+</html>

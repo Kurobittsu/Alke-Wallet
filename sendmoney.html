@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet - Enviar dinero</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <a class="navbar-brand" href="menu.html">Alke Wallet</a>
+    <div class="d-flex gap-3 align-items-center">
+      <a href="deposit.html"      class="text-white text-decoration-none">Depositar</a>
+      <a href="sendmoney.html"    class="text-white text-decoration-none">Enviar</a>
+      <a href="transactions.html" class="text-white text-decoration-none">Movimientos</a>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width: 560px;">
+
+    <a href="menu.html" class="text-muted text-decoration-none mb-3 d-block">← Volver</a>
+    <h4 class="mb-4">📤 Enviar dinero</h4>
+
+    <!-- Saldo -->
+    <div class="saldo-card mb-4">
+      <p class="mb-1 opacity-75">Saldo disponible</p>
+      <div class="saldo-monto">$<span id="saldo">0,00</span></div>
+    </div>
+
+    <!-- Formulario de envío -->
+    <div class="card p-4 mb-4">
+      <h6 class="mb-3">Nueva transferencia</h6>
+      <div id="mensaje-envio" class="alert d-none"></div>
+
+      <div class="mb-3">
+        <label class="form-label">Destinatario</label>
+        <input type="text" id="buscar-contacto" class="form-control" placeholder="Buscar contacto...">
+        <div id="sugerencias" class="list-group mt-1"></div>
+        <input type="hidden" id="contacto-nombre">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Monto</label>
+        <input type="number" id="monto-envio" class="form-control" placeholder="Ej: 500" min="1">
+      </div>
+
+      <button class="btn btn-primary w-100" onclick="enviarDinero()">Enviar transferencia</button>
+    </div>
+
+    <!-- Agregar contacto -->
+    <div class="card p-4 mb-4">
+      <h6 class="mb-3">➕ Agregar nuevo contacto</h6>
+      <div id="mensaje-contacto" class="alert d-none"></div>
+
+      <div class="mb-3">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" id="nuevo-nombre" class="form-control" placeholder="Nombre Apellido">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" id="nuevo-email" class="form-control" placeholder="email@ejemplo.com">
+      </div>
+      <button class="btn btn-outline-primary w-100" onclick="nuevoContacto()">Agregar contacto</button>
+    </div>
+
+    <!-- Lista de contactos -->
+    <div class="card p-3">
+      <h6 class="mb-3">👥 Mis contactos</h6>
+      <div id="lista-contactos"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    verificarSesion();
+
+    $("#saldo").text(formatearMonto(obtenerSaldo()));
+
+    // Autocompletar contactos con jQuery
+    $("#buscar-contacto").on("input", function() {
+      const texto = $(this).val().toLowerCase().trim();
+      $("#sugerencias").empty();
+      $("#contacto-nombre").val("");
+
+      if (!texto) return;
+
+      const coincidencias = obtenerContactos().filter(function(c) {
+        return c.nombre.toLowerCase().includes(texto) || c.email.toLowerCase().includes(texto);
+      });
+
+      coincidencias.forEach(function(c) {
+        $("#sugerencias").append(`
+          <button type="button" class="list-group-item list-group-item-action"
+                  onclick="seleccionarContacto('${c.nombre}')">
+            ${c.nombre} <small class="text-muted">${c.email}</small>
+          </button>
+        `);
+      });
+    });
+
+    function seleccionarContacto(nombre) {
+      $("#buscar-contacto").val(nombre);
+      $("#contacto-nombre").val(nombre);
+      $("#sugerencias").empty();
+    }
+
+    function enviarDinero() {
+      const destinatario = $("#contacto-nombre").val() || $("#buscar-contacto").val().trim();
+      const monto        = parseFloat($("#monto-envio").val());
+      const saldo        = obtenerSaldo();
+      const msg          = $("#mensaje-envio");
+
+      if (!destinatario) {
+        msg.text("Seleccioná un destinatario.").removeClass("d-none alert-success").addClass("alert-warning");
+        return;
+      }
+      if (!monto || monto <= 0) {
+        msg.text("Ingresá un monto válido.").removeClass("d-none alert-success").addClass("alert-danger");
+        return;
+      }
+      if (monto > saldo) {
+        msg.text("Saldo insuficiente.").removeClass("d-none alert-success").addClass("alert-danger");
+        return;
+      }
+
+      const nuevoSaldo = saldo - monto;
+      guardarSaldo(nuevoSaldo);
+      agregarTransaccion({ tipo: "egreso", descripcion: "Envío a " + destinatario, monto: -monto });
+
+      $("#saldo").text(formatearMonto(nuevoSaldo));
+      $("#buscar-contacto").val("");
+      $("#contacto-nombre").val("");
+      $("#monto-envio").val("");
+
+      msg.text("¡Transferencia de $" + formatearMonto(monto) + " enviada a " + destinatario + "!")
+         .removeClass("d-none alert-danger alert-warning").addClass("alert-success");
+    }
+
+    function nuevoContacto() {
+      const nombre = $("#nuevo-nombre").val().trim();
+      const email  = $("#nuevo-email").val().trim();
+      const msg    = $("#mensaje-contacto");
+
+      if (!nombre || !email) {
+        msg.text("Completá nombre y email.").removeClass("d-none alert-success").addClass("alert-warning");
+        return;
+      }
+
+      agregarContacto({ nombre, email });
+      cargarContactos();
+      $("#nuevo-nombre").val("");
+      $("#nuevo-email").val("");
+
+      msg.text("Contacto agregado.").removeClass("d-none alert-warning").addClass("alert-success");
+    }
+
+    function cargarContactos() {
+      $("#lista-contactos").empty();
+      obtenerContactos().forEach(function(c) {
+        $("#lista-contactos").append(`
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+              <div>${c.nombre}</div>
+              <small class="text-muted">${c.email}</small>
+            </div>
+            <button class="btn btn-sm btn-outline-primary"
+                    onclick="seleccionarContacto('${c.nombre}'); window.scrollTo(0,0);">
+              Seleccionar
+            </button>
+          </div>
+        `);
+      });
+    }
+
+    cargarContactos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet - Inicio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <a class="navbar-brand" href="menu.html">Alke Wallet</a>
+    <div class="d-flex gap-3 align-items-center">
+      <a href="deposit.html"      class="text-white text-decoration-none">Depositar</a>
+      <a href="sendmoney.html"    class="text-white text-decoration-none">Enviar</a>
+      <a href="transactions.html" class="text-white text-decoration-none">Movimientos</a>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+
+    <h4 id="saludo" class="mb-4"></h4>
+
+    <!-- Saldo -->
+    <div class="saldo-card mb-4">
+      <p class="mb-1 opacity-75">Saldo disponible</p>
+      <div class="saldo-monto">$<span id="saldo">0,00</span></div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <a href="deposit.html" class="btn btn-outline-primary w-100 py-3">💰 Depositar</a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="sendmoney.html" class="btn btn-outline-primary w-100 py-3">📤 Enviar</a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="transactions.html" class="btn btn-outline-primary w-100 py-3">📋 Movimientos</a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="sendmoney.html" class="btn btn-outline-primary w-100 py-3">👥 Contactos</a>
+      </div>
+    </div>
+
+    <!-- Últimos movimientos -->
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Últimos movimientos</h5>
+        <a href="transactions.html" class="text-decoration-none">Ver todos</a>
+      </div>
+      <div id="lista-transacciones"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    verificarSesion();
+
+    const sesion = obtenerSesion();
+
+    // Saludo y saldo
+    $("#saludo").text("Hola, " + sesion.nombre + " 👋");
+    $("#saldo").text(formatearMonto(obtenerSaldo()));
+
+    // Últimas 3 transacciones
+    const transacciones = obtenerTransacciones().slice(0, 3);
+
+    if (transacciones.length === 0) {
+      $("#lista-transacciones").html('<p class="text-muted text-center py-2">Sin movimientos</p>');
+    } else {
+      transacciones.forEach(function(tx) {
+        const esPositivo = tx.monto > 0;
+        const clase      = esPositivo ? "monto-positivo" : "monto-negativo";
+        const signo      = esPositivo ? "+" : "";
+
+        $("#lista-transacciones").append(`
+          <div class="transaccion-item d-flex justify-content-between">
+            <div>
+              <div>${tx.descripcion}</div>
+              <small class="text-muted">${tx.fecha}</small>
+            </div>
+            <div class="${clase}">${signo}$${formatearMonto(tx.monto)}</div>
+          </div>
+        `);
+      });
+    }
+  </script>
+</body>
+</html>
