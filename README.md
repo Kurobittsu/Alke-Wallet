@@ -72,12 +72,12 @@ Vista de historial de movimientos con visualización dinámica y actualización 
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/usuario/alke-wallet.git
+   git clone https://github.com/Kurobittsu/Alke-Wallet
    ```
 
 2. Ingresa al directorio:
    ```bash
-   cd alke-wallet
+   cd Alke-Wallet
    ```
 
 3. Abre `index.html` en tu navegador o utiliza la extensión **Live Server** en VS Code.
